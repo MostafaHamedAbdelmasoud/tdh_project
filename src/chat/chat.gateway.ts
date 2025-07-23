@@ -13,7 +13,7 @@ import { SocketAuthMiddleware } from '../auth/socket-auth.middleware';
 import { ChatService } from './chat.service';
 import { Inject } from '@nestjs/common';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
-
+import { ConfigService } from '@nestjs/config';
 /**
  * ChatGateway handles real-time chat events and connections.
  */
@@ -30,12 +30,15 @@ export class ChatGateway
     keyPrefix: 'room',
   });
 
-  constructor(@Inject(ChatService) private readonly chatService: ChatService) {}
+  constructor(
+    @Inject(ChatService) private readonly chatService: ChatService,
+    private readonly configService: ConfigService,
+  ) {}
 
   afterInit(server: Server): void {
     // Apply authentication middleware to all connections
     server.use((socket, next) => {
-      const middleware = new SocketAuthMiddleware();
+      const middleware = new SocketAuthMiddleware(this.configService);
       middleware.use(socket as any, next);
     });
   }
